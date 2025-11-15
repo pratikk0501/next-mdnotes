@@ -93,8 +93,8 @@ function Login() {
           {isRegistered && (
             <button
               onClick={() => {
-                setMsg("✅ Reset password email sent! Check spam folder too.");
                 resetpassword(email);
+                setMsg("✅ Reset password email sent! Check spam folder too.");
               }}
               className="card-button-secondary"
             >
