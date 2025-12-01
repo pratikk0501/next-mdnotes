@@ -151,6 +151,24 @@ footer a img {
   display: none !important;
 }
 
+.label-filter {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.label-filter p {
+  margin-top: 0.3rem;
+  font-weight: 600;
+  max-width: unset;
+}
+
+.label-filter select {
+  flex: 1;
+  max-width: unset;
+  padding: 0.5rem;
+  background: var(--background-secondary);
+}
+
 .nav button {
   display: flex;
   width: 100%;
@@ -208,6 +226,53 @@ footer a img {
 
 .list-btn:hover .delete-btn:hover {
   color: #ff4e9a;
+}
+
+.label-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.label-buttons button {
+  padding: 0.25rem 0.5rem;
+  border: none;
+  background: var(--background-secondary);
+  box-shadow: unset;
+}
+
+.label-buttons button:hover {
+  background: var(--background-muted);
+  transform: unset;
+}
+
+.label-input {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: unset;
+  align-items: center;
+}
+
+.label-input input {
+  flex: 20;
+  max-width: unset;
+  min-width: 0;
+  padding: 0.5rem;
+  border: none;
+}
+
+.label-input button {
+  padding: 0.5rem 1rem;
+  flex: 1;
+  width: 100%;
+  max-width: unset;
 }
 
 .notes-container,

@@ -1,3 +1,6 @@
+"use client";
+import { useState } from "react";
+
 function TopNav(props) {
   const {
     isViewer,
@@ -5,7 +8,13 @@ function TopNav(props) {
     handleToggleMenu,
     handleSaveNote,
     savingNote,
+    labelList,
+    setLabel,
+    removeLabel,
   } = props;
+
+  const [labelVal, setLabelVal] = useState("");
+  const labels = labelList || [];
   return (
     <>
       <div className="notes-btn">
@@ -35,6 +44,52 @@ function TopNav(props) {
         </button>
       </div>
       <div className="full-line"></div>
+      <div className="label-area">
+        <div className="label-input">
+          <input
+            id="label-input"
+            name="input"
+            type="text"
+            placeholder="Add label...(Will only be saved after saving note)"
+            value={labelVal}
+            onChange={(e) => {
+              setLabelVal(e.target.value);
+            }}
+          />
+          <button
+            onClick={() => {
+              if (labelVal.trim() !== "" && !labels.includes(labelVal.trim())) {
+                labels.push(labelVal.trim());
+                setLabelVal("");
+                setLabel(labelVal.trim());
+              } else {
+                setLabelVal("");
+              }
+            }}
+            className="card-button-primary"
+          >
+            <i className="fa-solid fa-plus"></i>
+          </button>
+        </div>
+        <div className="label-buttons">
+          {labels.map((label, labelidx) => {
+            return (
+              <button
+                key={labelidx}
+                onClick={() => {
+                  removeLabel(label);
+                }}
+              >
+                <span>
+                  <p>
+                    {label} <small>❌</small>
+                  </p>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </>
   );
 }

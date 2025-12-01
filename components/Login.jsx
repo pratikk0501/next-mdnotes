@@ -49,6 +49,8 @@ function Login() {
         <div>
           <p>Email</p>
           <input
+            id="email"
+            name="email"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
@@ -60,6 +62,8 @@ function Login() {
         <div>
           <p>Password</p>
           <input
+            id="password"
+            name="password"
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);

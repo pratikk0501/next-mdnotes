@@ -1,12 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/firebase";
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  getDocs,
-} from "firebase/firestore";
+import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -15,16 +9,23 @@ function SideNav(props) {
     showNav,
     setShowNav,
     handleCreateNote,
-    noteIds,
-    setNoteIds,
-    setIsViewer,
+    setNotes,
+    notes,
     setShowModal,
+    navRefreshKey,
+    setLoggingOut,
   } = props;
 
   const router = useRouter();
   const ref = useRef();
-  const { signout, currentUser } = useAuth();
+  const { currentUser } = useAuth();
   const [noteTimes, setNoteTimes] = useState({});
+  const [labelList, setLabelList] = useState([]);
+  const [selectedLabel, setSelectedLabel] = useState("All");
+  const filteredList =
+    selectedLabel === "All"
+      ? notes
+      : notes.filter((note) => note.labels.includes(selectedLabel));
 
   function formatTimeAgo(deltaMs) {
     const seconds = Math.floor(deltaMs / 1000);
@@ -68,7 +69,7 @@ function SideNav(props) {
 
   useEffect(() => {
     if (!currentUser || !currentUser.uid) return;
-    if (!noteIds || noteIds.length === 0) {
+    if (!notes || notes.length === 0) {
       setNoteTimes({});
       return;
     }
@@ -79,13 +80,13 @@ function SideNav(props) {
       try {
         // fetch all times in parallel
         const pairs = await Promise.all(
-          noteIds?.map(async (id) => {
+          notes?.map(async (note) => {
             try {
-              const time = await fetchTimeRemaining(id);
-              return [id, time];
+              const time = await fetchTimeRemaining(note.id);
+              return [note.id, time];
             } catch (err) {
-              console.error("fetchTimeRemaining for", id, err);
-              return [id, null];
+              console.error("fetchTimeRemaining for", note.id, err);
+              return [note.id, null];
             }
           })
         );
@@ -101,27 +102,36 @@ function SideNav(props) {
     return () => {
       mounted = false;
     };
-  }, [noteIds, currentUser, db]);
+  }, [notes, currentUser, db]);
 
   useEffect(() => {
     if (!currentUser) {
       return;
     }
-    async function fetchIndexes() {
+    async function fetchNotes() {
       try {
         const notesRef = collection(db, "users", currentUser.uid, "notes");
         const snapshot = await getDocs(notesRef);
-        const notesIdxs = snapshot.docs.map((doc) => {
-          return doc.id;
+        const notesData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          content: doc.data().content || "",
+          labels: doc.data().labels || [],
+        }));
+        const notesLabels = notesData.flatMap((doc) => {
+          return doc.labels;
         });
+        const uniqueLabels = Array.from(new Set(notesLabels));
+        uniqueLabels.push("All");
+        uniqueLabels.sort();
 
-        setNoteIds(notesIdxs);
+        setLabelList(uniqueLabels);
+        setNotes(notesData);
       } catch (error) {
         console.log(error.message);
       }
     }
-    fetchIndexes();
-  }, []);
+    fetchNotes();
+  }, [navRefreshKey, currentUser]);
 
   return (
     <section ref={ref} className={"nav " + (showNav ? "" : "hidden-nav")}>
@@ -132,28 +142,44 @@ function SideNav(props) {
         <h6>New Note</h6>
         <i className="fa-solid fa-plus"></i>
       </button>
+      <div className="label-filter">
+        <p>Filter by:</p>
+        <select
+          name="label-filter"
+          id="filter"
+          value={selectedLabel}
+          onChange={(e) => {
+            setSelectedLabel(e.target.value);
+          }}
+        >
+          {labelList.map((label, idx) => (
+            <option key={idx} value={label}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="notes-list">
-        {noteIds.length == 0 ? (
+        {notes.length == 0 ? (
           <p>You have 0 notes</p>
         ) : (
-          noteIds.map((note, idx) => {
-            const [n, _] = note.split("__");
-            const timeSince = noteTimes[note];
+          filteredList.map((note) => {
+            const timeSince = noteTimes[note.id];
             return (
               <button
-                key={idx}
+                key={note.id}
                 onClick={() => {
-                  setIsViewer(true);
-                  router.push("/notes?id=" + note);
+                  router.push("/notes?id=" + note.id);
                 }}
                 className="card-button-secondary list-btn"
               >
-                <p>{n}</p>
+                <p>{note?.content.replaceAll("#", "").slice(0, 15)}</p>
                 <small>{timeSince}</small>
                 <div
                   onClick={async (event) => {
+                    setShowModal({ display: false });
                     event.stopPropagation();
-                    setShowModal({ id: note, display: true });
+                    setShowModal({ id: note.id, display: true });
                   }}
                   className="delete-btn"
                 >
@@ -165,7 +191,7 @@ function SideNav(props) {
         )}
       </div>
       <div className="full-line"></div>
-      <button onClick={signout}>
+      <button onClick={() => setLoggingOut(true)}>
         <h6>Sign out</h6>
         <i className="fa-solid fa-arrow-right-from-bracket"></i>
       </button>

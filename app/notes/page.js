@@ -15,11 +15,13 @@ function NotesPage() {
   const [note, setNote] = useState({
     content: "",
   });
-  const [noteIds, setNoteIds] = useState([]);
+  const [notes, setNotes] = useState([]);
   const [savingNote, setSavingNote] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showModal, setShowModal] = useState({ id: null, display: false });
-  const { isLoadingUser, currentUser } = useAuth();
+  const [navRefreshKey, setNavRefreshKey] = useState(0);
+  const [isDeleting, setIsDeleting] = useState({ id: null, display: false });
+  const [loggingOut, setLoggingOut] = useState(false);
+  const { isLoadingUser, currentUser, signout } = useAuth();
   const searchParams = useSearchParams();
 
   function handleToggleViewer() {
@@ -33,6 +35,7 @@ function NotesPage() {
   function handleCreateNote() {
     setNote({
       content: "",
+      labels: [],
     });
     setIsViewer(false);
     window.history.replaceState(null, "", "/notes");
@@ -42,23 +45,40 @@ function NotesPage() {
     setNote({ ...note, content: e.target.value });
   }
 
+  function handleAddLabel(label) {
+    if (note.labels && note.labels.includes(label)) {
+      return;
+    }
+    const updatedLabels = note.labels ? [...note.labels, label] : [label];
+    setNote({ ...note, labels: updatedLabels });
+  }
+
+  function handleRemoveLabel(label) {
+    if (!note.labels || !note.labels.includes(label)) {
+      return;
+    }
+    const updatedLabels = note.labels.filter((lbl) => lbl !== label);
+    setNote({ ...note, labels: updatedLabels });
+  }
+
   function handleCloseModal() {
-    setShowModal({ id: showModal.id, display: false });
+    setIsDeleting({ id: isDeleting.id, display: false });
+    setLoggingOut(false);
   }
 
   async function deleteNote(noteIdx) {
     try {
       const noteRef = doc(db, "users", currentUser.uid, "notes", noteIdx);
       await deleteDoc(noteRef);
-      setNoteIds((curr) => {
-        return curr.filter((idx) => idx !== noteIdx);
+      setNotes((curr) => {
+        return curr.filter((note) => note.id !== noteIdx);
       });
     } catch (error) {
       console.log(error.message);
     } finally {
-      setShowModal({ display: false });
-      if (note.id === showModal.id) {
-        setNote({ content: "" });
+      setIsDeleting({ display: false });
+      if (note.id === isDeleting.id) {
+        setNote({ content: "", labels: [] });
       }
     }
   }
@@ -83,8 +103,8 @@ function NotesPage() {
         const newDocInfo = await setDoc(notesRef, {
           content: note.content,
           lastModified: Date.now(),
+          labels: note.labels || [],
         });
-        setNoteIds((curr) => [...curr, newId]);
         setNote({ ...note, id: newId });
         window.history.pushState(null, "", "/notes?id=" + newId);
       }
@@ -92,6 +112,7 @@ function NotesPage() {
       console.log(error.message);
     } finally {
       setSavingNote(false);
+      setNavRefreshKey((curr) => curr + 1);
     }
   }
 
@@ -130,13 +151,13 @@ function NotesPage() {
 
   return (
     <main id="notes">
-      {showModal.display && (
+      {isDeleting.display && (
         <Modal handleCloseModal={handleCloseModal}>
           <p>Are you sure you want to delete this note?</p>
           <div className="modal-actions">
             <button
               onClick={async () => {
-                await deleteNote(showModal.id);
+                await deleteNote(isDeleting.id);
               }}
             >
               Yes
@@ -145,14 +166,24 @@ function NotesPage() {
           </div>
         </Modal>
       )}
+      {loggingOut && (
+        <Modal handleCloseModal={handleCloseModal}>
+          <p>Are you sure you want to logout as '{currentUser.email}'?</p>
+          <div className="modal-actions">
+            <button onClick={signout}>Yes</button>
+            <button onClick={handleCloseModal}>No</button>
+          </div>
+        </Modal>
+      )}
       <SideNav
         handleCreateNote={handleCreateNote}
-        noteIds={noteIds}
-        setNoteIds={setNoteIds}
+        setNotes={setNotes}
+        notes={notes}
         showNav={showNav}
         setShowNav={setShowNav}
-        setIsViewer={setIsViewer}
-        setShowModal={setShowModal}
+        setShowModal={setIsDeleting}
+        setLoggingOut={setLoggingOut}
+        navRefreshKey={navRefreshKey}
       />
       {isViewer ? (
         <MDX
@@ -172,6 +203,9 @@ function NotesPage() {
           handleToggleMenu={handleToggleMenu}
           handleSaveNote={handleSaveNote}
           savingNote={savingNote}
+          labelList={note.labels}
+          setLabel={handleAddLabel}
+          removeLabel={handleRemoveLabel}
         />
       )}
     </main>

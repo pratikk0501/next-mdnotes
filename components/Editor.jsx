@@ -7,6 +7,8 @@ function Editor(props) {
     <section className="notes-container">
       <TopNav {...props} />
       <textarea
+        id="note-content"
+        name="content"
         value={text}
         onChange={(e) => {
           setText(e);
