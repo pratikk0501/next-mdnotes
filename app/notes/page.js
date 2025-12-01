@@ -168,7 +168,9 @@ function NotesPage() {
       )}
       {loggingOut && (
         <Modal handleCloseModal={handleCloseModal}>
-          <p>Are you sure you want to logout as '{currentUser.email}'?</p>
+          <p>
+            Are you sure you want to logout as &apos;{currentUser.email}&apos;?
+          </p>
           <div className="modal-actions">
             <button onClick={signout}>Yes</button>
             <button onClick={handleCloseModal}>No</button>
