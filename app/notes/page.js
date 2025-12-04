@@ -22,6 +22,7 @@ function NotesPage() {
   const [navRefreshKey, setNavRefreshKey] = useState(0);
   const [isDeleting, setIsDeleting] = useState({ id: null, display: false });
   const [loggingOut, setLoggingOut] = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
   const { isLoadingUser, currentUser, signout } = useAuth();
   const searchParams = useSearchParams();
 
@@ -65,6 +66,7 @@ function NotesPage() {
   function handleCloseModal() {
     setIsDeleting({ id: isDeleting.id, display: false });
     setLoggingOut(false);
+    setShowFilter(false);
   }
 
   async function deleteNote(noteIdx) {
@@ -166,6 +168,9 @@ function NotesPage() {
         isViewer,
         handleCreateNote,
         handleEditNote,
+        handleCloseModal,
+        showFilter,
+        setShowFilter,
         navRefreshKey,
       }}
     >

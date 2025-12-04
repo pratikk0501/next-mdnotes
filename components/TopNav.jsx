@@ -7,7 +7,6 @@ function TopNav() {
     handleToggleMenu,
     handleSaveNote,
     note,
-    notes,
     handleAddLabel,
     handleRemoveLabel,
     savingNote,
@@ -43,28 +42,6 @@ function TopNav() {
             </>
           )}
         </button>
-        <div className="search-input-wrapper">
-          <i
-            className="fa-solid fa-magnifying-glass search-icon"
-            aria-hidden="true"
-          ></i>
-          <input
-            id="notes-search"
-            name="search"
-            className="search-input"
-            type="text"
-            placeholder="Search in your notes..."
-            aria-label="Search notes"
-          />
-          {/* <select name="dropdown" id="search-dropdown">
-            {notes?.map((note, idx) => (
-              <option key={idx} value={note.id}>
-                {note?.content?.replaceAll("#", "").slice(0, 15) ||
-                  "Untitled Note"}
-              </option>
-            ))}
-          </select> */}
-        </div>
       </div>
       <div className="full-line"></div>
       <div className="label-area">

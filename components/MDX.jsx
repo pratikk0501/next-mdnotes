@@ -2,7 +2,7 @@ import { useNotes } from "@/context/NoteContext";
 import TopNav from "./TopNav";
 import Markdown from "markdown-to-jsx";
 
-function MDX(props) {
+function MDX() {
   const { note } = useNotes();
 
   return (

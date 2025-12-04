@@ -4,6 +4,7 @@ import { db } from "@/firebase";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import Filter from "./Filter";
 
 function SideNav(props) {
   const { showNav, setShowNav, setShowModal, setLoggingOut } = props;
@@ -15,32 +16,57 @@ function SideNav(props) {
   const [noteTimes, setNoteTimes] = useState({});
   const [labelList, setLabelList] = useState([]);
   const [selectedLabel, setSelectedLabel] = useState("All");
-  const filteredList =
-    selectedLabel === "All"
-      ? notes
-      : notes.filter((note) => note.labels.includes(selectedLabel));
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTime, setSelectedTime] = useState("All time");
 
-  function formatTimeAgo(deltaMs) {
-    const seconds = Math.floor(deltaMs / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
+  const filteredList = notes?.filter((note) => {
+    const matchesLabel =
+      selectedLabel === "All" ? true : note.labels?.includes(selectedLabel);
+    const q = searchQuery?.trim().toLowerCase();
+    const matchesSearch =
+      q === "" ||
+      note.content?.toLowerCase().includes(q) ||
+      note.id.toLowerCase().includes(q);
+    const matchesTime = timeFilter(note.lastModified);
+    return matchesLabel && matchesSearch && matchesTime;
+  });
 
-    if (seconds < 10) return "just now";
-    if (seconds < 60) return `${seconds} seconds ago`;
-    if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
-    if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-    return `${days} day${days === 1 ? "" : "s"} ago`;
+  function timeFilter(noteMs) {
+    if (selectedTime === "All time") return true;
+    const noteDate = new Date(Number(noteMs));
+    const deltaMs = Date.now() - noteDate.getTime();
+
+    switch (selectedTime) {
+      case "Last hour":
+        return deltaMs <= 60 * 60 * 1000;
+      case "Last 24 hours":
+        return deltaMs <= 24 * 60 * 60 * 1000;
+      case "Last 7 days":
+        return deltaMs <= 7 * 24 * 60 * 60 * 1000;
+      case "Last 30 days":
+        return deltaMs <= 30 * 24 * 60 * 60 * 1000;
+      case "Last 12 months":
+        return deltaMs <= 365 * 24 * 60 * 60 * 1000;
+      default:
+        return true;
+    }
   }
 
-  async function fetchTimeRemaining(note) {
+  function fetchTimeRemaining(note) {
     try {
-      const noteRef = doc(db, "users", currentUser.uid, "notes", note);
-      const lastModified = await getDoc(noteRef);
-      const lastModifiedData = lastModified.data().lastModified;
-      const lastDate = new Date(Number(lastModifiedData));
+      const lastDate = new Date(Number(note.lastModified));
+      const deltaMs = Date.now() - lastDate.getTime();
+      const seconds = Math.floor(deltaMs / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
 
-      return formatTimeAgo(Date.now() - lastDate.getTime());
+      if (seconds < 10) return "Just now";
+      if (seconds < 60) return `${seconds} seconds ago`;
+      if (minutes < 60)
+        return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+      if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+      return `${days} day${days === 1 ? "" : "s"} ago`;
     } catch (error) {
       console.error(error.message);
     }
@@ -75,7 +101,7 @@ function SideNav(props) {
         const pairs = await Promise.all(
           notes?.map(async (note) => {
             try {
-              const time = await fetchTimeRemaining(note.id);
+              const time = fetchTimeRemaining(note);
               return [note.id, time];
             } catch (err) {
               console.error("fetchTimeRemaining for", note.id, err);
@@ -109,6 +135,7 @@ function SideNav(props) {
           id: doc.id,
           content: doc.data().content || "",
           labels: doc.data().labels || [],
+          lastModified: doc.data().lastModified || 0,
         }));
         const notesLabels = notesData.flatMap((doc) => {
           return doc.labels;
@@ -135,26 +162,20 @@ function SideNav(props) {
         <h6>New Note</h6>
         <i className="fa-solid fa-plus"></i>
       </button>
-      <div className="label-filter">
-        <p>Filter by:</p>
-        <select
-          name="label-filter"
-          id="filter"
-          value={selectedLabel}
-          onChange={(e) => {
-            setSelectedLabel(e.target.value);
-          }}
-        >
-          {labelList.map((label, idx) => (
-            <option key={idx} value={label}>
-              {label}
-            </option>
-          ))}
-        </select>
-      </div>
+      <Filter
+        setSelectedLabel={setSelectedLabel}
+        selectedLabel={selectedLabel}
+        labelList={labelList}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        selectedTime={selectedTime}
+        setSelectedTime={setSelectedTime}
+      />
       <div className="notes-list">
         {notes.length == 0 ? (
           <p>You have 0 notes</p>
+        ) : filteredList.length == 0 ? (
+          <p>No notes match your search</p>
         ) : (
           filteredList.map((note) => {
             const timeSince = noteTimes[note.id];

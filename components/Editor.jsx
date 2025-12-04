@@ -1,7 +1,7 @@
 import { useNotes } from "@/context/NoteContext";
 import TopNav from "./TopNav";
 
-function Editor(props) {
+function Editor() {
   const { note, handleEditNote } = useNotes();
 
   return (
