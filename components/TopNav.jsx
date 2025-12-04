@@ -1,20 +1,21 @@
-"use client";
+import { useNotes } from "@/context/NoteContext";
 import { useState } from "react";
 
-function TopNav(props) {
+function TopNav() {
   const {
-    isViewer,
     handleToggleViewer,
     handleToggleMenu,
     handleSaveNote,
+    note,
+    notes,
+    handleAddLabel,
+    handleRemoveLabel,
     savingNote,
-    labelList,
-    setLabel,
-    removeLabel,
-  } = props;
+    isViewer,
+  } = useNotes();
 
   const [labelVal, setLabelVal] = useState("");
-  const labels = labelList || [];
+  const labels = note?.labels || [];
   return (
     <>
       <div className="notes-btn">
@@ -42,6 +43,28 @@ function TopNav(props) {
             </>
           )}
         </button>
+        <div className="search-input-wrapper">
+          <i
+            className="fa-solid fa-magnifying-glass search-icon"
+            aria-hidden="true"
+          ></i>
+          <input
+            id="notes-search"
+            name="search"
+            className="search-input"
+            type="text"
+            placeholder="Search in your notes..."
+            aria-label="Search notes"
+          />
+          {/* <select name="dropdown" id="search-dropdown">
+            {notes?.map((note, idx) => (
+              <option key={idx} value={note.id}>
+                {note?.content?.replaceAll("#", "").slice(0, 15) ||
+                  "Untitled Note"}
+              </option>
+            ))}
+          </select> */}
+        </div>
       </div>
       <div className="full-line"></div>
       <div className="label-area">
@@ -61,7 +84,7 @@ function TopNav(props) {
               if (labelVal.trim() !== "" && !labels.includes(labelVal.trim())) {
                 labels.push(labelVal.trim());
                 setLabelVal("");
-                setLabel(labelVal.trim());
+                handleAddLabel(labelVal.trim());
               } else {
                 setLabelVal("");
               }
@@ -77,7 +100,7 @@ function TopNav(props) {
               <button
                 key={labelidx}
                 onClick={() => {
-                  removeLabel(label);
+                  handleRemoveLabel(label);
                 }}
               >
                 <span>

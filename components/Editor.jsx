@@ -1,17 +1,18 @@
+import { useNotes } from "@/context/NoteContext";
 import TopNav from "./TopNav";
 
 function Editor(props) {
-  const { text, setText } = props;
+  const { note, handleEditNote } = useNotes();
 
   return (
     <section className="notes-container">
-      <TopNav {...props} />
+      <TopNav />
       <textarea
         id="note-content"
         name="content"
-        value={text}
+        value={note.content}
         onChange={(e) => {
-          setText(e);
+          handleEditNote(e);
         }}
         placeholder="There are 206 bones in the human body"
       />

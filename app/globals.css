@@ -121,9 +121,10 @@ footer a img {
 
 .notes-btn {
   display: flex;
-  align-items: stretch;
-  flex-wrap: wrap;
+  align-items: center;
+  flex-wrap: nowrap;
   gap: 1rem;
+  max-width: unset;
 }
 
 .notes-btn button {
@@ -131,6 +132,35 @@ footer a img {
   align-items: center;
   justify-content: center;
   gap: 1rem;
+}
+
+.search-input-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  min-width: 200px;
+  margin-left: auto;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2.2rem;
+  box-sizing: border-box;
+  border: none;
+  background: var(--background-secondary);
+  color: var(--text-primary);
+  border-radius: 0.5rem;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+  font-size: 0.95rem;
+  margin-bottom: 0.1rem;
 }
 
 .nav {
@@ -232,6 +262,7 @@ footer a img {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  margin-bottom: -0.8rem;
 }
 
 .label-buttons {
@@ -245,6 +276,7 @@ footer a img {
   border: none;
   background: var(--background-secondary);
   box-shadow: unset;
+  border-radius: 0.5rem;
 }
 
 .label-buttons button:hover {
@@ -368,9 +400,24 @@ article > div {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     flex: 1;
   }
+
   .hero-img {
     position: sticky;
     max-height: 100vh;
+  }
+
+  .notes-btn button {
+    width: 50%;
+    max-width: 10vw;
+  }
+
+  .notes-btn h6 {
+    display: none;
+  }
+
+  .search-input-wrapper {
+    max-width: 250px;
+    min-width: none;
   }
 }
 
@@ -389,8 +436,22 @@ article > div {
     display: flex !important;
   }
 
+  .notes-btn h6 {
+    display: block;
+    font-size: 0.7rem;
+  }
+
+  .search-input-wrapper {
+    max-width: 300px;
+    min-width: none;
+  }
+
   .menu {
     display: none !important;
+  }
+
+  .notes-btn button {
+    max-width: 12vw;
   }
 
   .notes-container,
@@ -406,6 +467,14 @@ article > div {
 
   .hero-img {
     grid-column: span 2 / span 2;
+  }
+
+  .notes-btn h6 {
+    font-size: 1rem;
+  }
+
+  .search-input-wrapper {
+    max-width: 420px;
   }
 
   #notes {

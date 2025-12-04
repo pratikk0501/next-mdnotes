@@ -4,6 +4,7 @@ import MDX from "@/components/MDX";
 import Modal from "@/components/Modal";
 import SideNav from "@/components/SideNav";
 import { useAuth } from "@/context/AuthContext";
+import { NotesProvider } from "@/context/NoteContext";
 import { db } from "@/firebase";
 import { deleteDoc, doc, getDoc, setDoc } from "firebase/firestore";
 import { useSearchParams } from "next/navigation";
@@ -150,67 +151,61 @@ function NotesPage() {
   }
 
   return (
-    <main id="notes">
-      {isDeleting.display && (
-        <Modal handleCloseModal={handleCloseModal}>
-          <p>Are you sure you want to delete this note?</p>
-          <div className="modal-actions">
-            <button
-              onClick={async () => {
-                await deleteNote(isDeleting.id);
-              }}
-            >
-              Yes
-            </button>
-            <button onClick={handleCloseModal}>No</button>
-          </div>
-        </Modal>
-      )}
-      {loggingOut && (
-        <Modal handleCloseModal={handleCloseModal}>
-          <p>
-            Are you sure you want to logout as &apos;{currentUser.email}&apos;?
-          </p>
-          <div className="modal-actions">
-            <button onClick={signout}>Yes</button>
-            <button onClick={handleCloseModal}>No</button>
-          </div>
-        </Modal>
-      )}
-      <SideNav
-        handleCreateNote={handleCreateNote}
-        setNotes={setNotes}
-        notes={notes}
-        showNav={showNav}
-        setShowNav={setShowNav}
-        setShowModal={setIsDeleting}
-        setLoggingOut={setLoggingOut}
-        navRefreshKey={navRefreshKey}
-      />
-      {isViewer ? (
-        <MDX
-          isViewer={isViewer}
-          text={note.content}
-          handleToggleViewer={handleToggleViewer}
-          handleToggleMenu={handleToggleMenu}
-          handleSaveNote={handleSaveNote}
-          savingNote={savingNote}
+    <NotesProvider
+      value={{
+        note,
+        setNote,
+        notes,
+        setNotes,
+        handleSaveNote,
+        handleAddLabel,
+        handleRemoveLabel,
+        handleToggleViewer,
+        handleToggleMenu,
+        savingNote,
+        isViewer,
+        handleCreateNote,
+        handleEditNote,
+        navRefreshKey,
+      }}
+    >
+      <main id="notes">
+        {isDeleting.display && (
+          <Modal handleCloseModal={handleCloseModal}>
+            <p>Are you sure you want to delete this note?</p>
+            <div className="modal-actions">
+              <button
+                onClick={async () => {
+                  await deleteNote(isDeleting.id);
+                }}
+              >
+                Yes
+              </button>
+              <button onClick={handleCloseModal}>No</button>
+            </div>
+          </Modal>
+        )}
+        {loggingOut && (
+          <Modal handleCloseModal={handleCloseModal}>
+            <p>
+              Are you sure you want to logout as &apos;{currentUser.email}
+              &apos;?
+            </p>
+            <div className="modal-actions">
+              <button onClick={signout}>Yes</button>
+              <button onClick={handleCloseModal}>No</button>
+            </div>
+          </Modal>
+        )}
+        <SideNav
+          showNav={showNav}
+          setShowNav={setShowNav}
+          setShowModal={setIsDeleting}
+          setLoggingOut={setLoggingOut}
         />
-      ) : (
-        <Editor
-          isViewer={isViewer}
-          text={note.content}
-          setText={handleEditNote}
-          handleToggleViewer={handleToggleViewer}
-          handleToggleMenu={handleToggleMenu}
-          handleSaveNote={handleSaveNote}
-          savingNote={savingNote}
-          labelList={note.labels}
-          setLabel={handleAddLabel}
-          removeLabel={handleRemoveLabel}
-        />
-      )}
-    </main>
+        {isViewer ? <MDX /> : <Editor />}
+      </main>
+    </NotesProvider>
   );
 }
 

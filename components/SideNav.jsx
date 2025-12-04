@@ -1,24 +1,17 @@
 import { useAuth } from "@/context/AuthContext";
+import { useNotes } from "@/context/NoteContext";
 import { db } from "@/firebase";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 function SideNav(props) {
-  const {
-    showNav,
-    setShowNav,
-    handleCreateNote,
-    setNotes,
-    notes,
-    setShowModal,
-    navRefreshKey,
-    setLoggingOut,
-  } = props;
+  const { showNav, setShowNav, setShowModal, setLoggingOut } = props;
+  const { currentUser } = useAuth();
+  const { handleCreateNote, notes, setNotes, navRefreshKey } = useNotes();
 
   const router = useRouter();
   const ref = useRef();
-  const { currentUser } = useAuth();
   const [noteTimes, setNoteTimes] = useState({});
   const [labelList, setLabelList] = useState([]);
   const [selectedLabel, setSelectedLabel] = useState("All");
