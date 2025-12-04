@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://pratiks-notes-app.netlify.app/sitemap.xml
