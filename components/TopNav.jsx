@@ -14,7 +14,6 @@ function TopNav() {
   } = useNotes();
 
   const [labelVal, setLabelVal] = useState("");
-  const labels = note?.labels || [];
   return (
     <>
       <div className="notes-btn">
@@ -58,8 +57,10 @@ function TopNav() {
           />
           <button
             onClick={() => {
-              if (labelVal.trim() !== "" && !labels.includes(labelVal.trim())) {
-                labels.push(labelVal.trim());
+              if (
+                labelVal.trim() !== "" &&
+                !note?.labels.includes(labelVal.trim())
+              ) {
                 setLabelVal("");
                 handleAddLabel(labelVal.trim());
               } else {
@@ -72,7 +73,7 @@ function TopNav() {
           </button>
         </div>
         <div className="label-buttons">
-          {labels.map((label, labelidx) => {
+          {(note?.labels || []).map((label, labelidx) => {
             return (
               <button
                 key={labelidx}

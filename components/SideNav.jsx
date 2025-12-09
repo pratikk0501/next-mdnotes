@@ -5,11 +5,18 @@ import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Filter from "./Filter";
+import Uploads from "./Uploads";
 
 function SideNav(props) {
   const { showNav, setShowNav, setShowModal, setLoggingOut } = props;
   const { currentUser } = useAuth();
-  const { handleCreateNote, notes, setNotes, navRefreshKey } = useNotes();
+  const {
+    handleCreateNote,
+    notes,
+    setNotes,
+    navRefreshKey,
+    fetchTimeRemaining,
+  } = useNotes();
 
   const router = useRouter();
   const ref = useRef();
@@ -18,6 +25,7 @@ function SideNav(props) {
   const [selectedLabel, setSelectedLabel] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTime, setSelectedTime] = useState("All time");
+  const [isUploading, setIsUploading] = useState(false);
 
   const filteredList = notes?.filter((note) => {
     const matchesLabel =
@@ -52,26 +60,6 @@ function SideNav(props) {
     }
   }
 
-  function fetchTimeRemaining(note) {
-    try {
-      const lastDate = new Date(Number(note.lastModified));
-      const deltaMs = Date.now() - lastDate.getTime();
-      const seconds = Math.floor(deltaMs / 1000);
-      const minutes = Math.floor(seconds / 60);
-      const hours = Math.floor(minutes / 60);
-      const days = Math.floor(hours / 24);
-
-      if (seconds < 10) return "Just now";
-      if (seconds < 60) return `${seconds} seconds ago`;
-      if (minutes < 60)
-        return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
-      if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-      return `${days} day${days === 1 ? "" : "s"} ago`;
-    } catch (error) {
-      console.error(error.message);
-    }
-  }
-
   useEffect(() => {
     function handleClickOutside(event) {
       if (ref.current && !ref.current.contains(event.target)) {
@@ -101,7 +89,7 @@ function SideNav(props) {
         const pairs = await Promise.all(
           notes?.map(async (note) => {
             try {
-              const time = fetchTimeRemaining(note);
+              const time = fetchTimeRemaining(note.lastModified);
               return [note.id, time];
             } catch (err) {
               console.error("fetchTimeRemaining for", note.id, err);
@@ -158,54 +146,90 @@ function SideNav(props) {
       <h1 className="text-gradient">MDNOTES</h1>
       <h5>Handy Notes App</h5>
       <div className="full-line"></div>
-      <button onClick={handleCreateNote}>
-        <h6>New Note</h6>
-        <i className="fa-solid fa-plus"></i>
-      </button>
-      <Filter
-        setSelectedLabel={setSelectedLabel}
-        selectedLabel={selectedLabel}
-        labelList={labelList}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        selectedTime={selectedTime}
-        setSelectedTime={setSelectedTime}
-      />
-      <div className="notes-list">
-        {notes.length == 0 ? (
-          <p>You have 0 notes</p>
-        ) : filteredList.length == 0 ? (
-          <p>No notes match your search</p>
-        ) : (
-          filteredList.map((note) => {
-            const timeSince = noteTimes[note.id];
-            return (
-              <button
-                key={note.id}
-                onClick={() => {
-                  router.push("/notes?id=" + note.id);
-                }}
-                className="card-button-secondary list-btn"
-              >
-                <p>{note?.content.replaceAll("#", "").slice(0, 15)}</p>
-                <small>{timeSince}</small>
-                <div
-                  onClick={async (event) => {
-                    setShowModal({ display: false });
-                    event.stopPropagation();
-                    setShowModal({ id: note.id, display: true });
-                  }}
-                  className="delete-btn"
-                >
-                  <i className="fa-solid fa-trash-can"></i>
-                </div>
-              </button>
-            );
-          })
-        )}
+      <div className="switch-nav">
+        <button
+          className={`switch-btn ${!isUploading ? "active" : ""}`}
+          aria-pressed={!isUploading}
+          role="tab"
+          title="Notes"
+          onClick={() => {
+            setIsUploading(false);
+          }}
+        >
+          <i className="fa-solid fa-clipboard-list" aria-hidden="true"></i>
+        </button>
+        <button
+          className={`switch-btn ${isUploading ? "active" : ""}`}
+          aria-pressed={isUploading}
+          role="tab"
+          title="Uploads"
+          onClick={() => {
+            setIsUploading(true);
+          }}
+        >
+          <i className="fa-solid fa-upload" aria-hidden="true"></i>
+        </button>
       </div>
+      {isUploading ? (
+        <Uploads />
+      ) : (
+        <>
+          <button
+            className="notes-list-secondary-btn"
+            onClick={handleCreateNote}
+          >
+            <h6>New Note</h6>
+            <i className="fa-solid fa-plus"></i>
+          </button>
+          <Filter
+            setSelectedLabel={setSelectedLabel}
+            selectedLabel={selectedLabel}
+            labelList={labelList}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            selectedTime={selectedTime}
+            setSelectedTime={setSelectedTime}
+          />
+          <div className="notes-list">
+            {notes.length === 0 ? (
+              <p>You have 0 notes</p>
+            ) : filteredList.length === 0 ? (
+              <p>No notes match your search</p>
+            ) : (
+              filteredList.map((note) => {
+                const timeSince = noteTimes[note.id];
+                return (
+                  <button
+                    key={note.id}
+                    className="card-button-secondary list-btn"
+                    onClick={() => {
+                      router.push("/notes?id=" + note.id);
+                    }}
+                  >
+                    <p>{note?.content.replaceAll("#", "").slice(0, 15)}</p>
+                    <small>{timeSince}</small>
+                    <div
+                      onClick={async (event) => {
+                        setShowModal({ display: false });
+                        event.stopPropagation();
+                        setShowModal({ id: note.id, display: true });
+                      }}
+                      className="delete-btn"
+                    >
+                      <i className="fa-solid fa-trash-can"></i>
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </>
+      )}
       <div className="full-line"></div>
-      <button onClick={() => setLoggingOut(true)}>
+      <button
+        className="notes-list-secondary-btn"
+        onClick={() => setLoggingOut(true)}
+      >
         <h6>Sign out</h6>
         <i className="fa-solid fa-arrow-right-from-bracket"></i>
       </button>

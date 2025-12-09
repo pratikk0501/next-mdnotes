@@ -69,6 +69,26 @@ function NotesPage() {
     setShowFilter(false);
   }
 
+  function fetchTimeRemaining(modifiedTime) {
+    try {
+      const lastDate = new Date(Number(modifiedTime));
+      const deltaMs = Date.now() - lastDate.getTime();
+      const seconds = Math.floor(deltaMs / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (seconds < 10) return "Just now";
+      if (seconds < 60) return `${seconds} seconds ago`;
+      if (minutes < 60)
+        return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+      if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+      return `${days} day${days === 1 ? "" : "s"} ago`;
+    } catch (error) {
+      console.error(error.message);
+    }
+  }
+
   async function deleteNote(noteIdx) {
     try {
       const noteRef = doc(db, "users", currentUser.uid, "notes", noteIdx);
@@ -172,6 +192,8 @@ function NotesPage() {
         showFilter,
         setShowFilter,
         navRefreshKey,
+        setNavRefreshKey,
+        fetchTimeRemaining,
       }}
     >
       <main id="notes">

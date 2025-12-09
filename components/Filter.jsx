@@ -41,11 +41,11 @@ export default function Filter(props) {
             setIsDefault(false);
           }}
         >
-          <i className="fa-solid fa-filter"></i>
+          <i className="fa-solid fa-filter" aria-hidden="true"></i>
         </button>
       ) : (
         <button onClick={handleToggleDefault}>
-          <i className="fa-solid fa-arrow-rotate-right"></i>
+          <i className="fa-solid fa-arrow-rotate-right" aria-hidden="true"></i>
         </button>
       )}
       {showFilter && (
